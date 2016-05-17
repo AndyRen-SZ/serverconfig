@@ -4,3 +4,4 @@ Git is kindly
 Git is MyKit
 Learn Stage
 Learn Stage22
+Excercise readme.txt
