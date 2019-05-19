@@ -121,12 +121,39 @@ def read_test():
 
 
 def batch_read_train(batch_size):
-    return None
+    reader = tf.TFRecordReader()
+    # 以下代码不能运行 why
+    # test_data_set_file_list = tf.train.match_filenames_once(TEST_DATA_SET_PATTERN)
+    # filename_queue = tf.train.string_input_producer(test_data_set_file_list, shuffle=False, num_epochs=1)
+    filename_queue = tf.train.string_input_producer(
+        ["C:/Users/Administrator/PycharmProjects/mytensorflow/data.cifar10-train-00000-of-00005",
+         "C:/Users/Administrator/PycharmProjects/mytensorflow/data.cifar10-train-00001-of-00005",
+         "C:/Users/Administrator/PycharmProjects/mytensorflow/data.cifar10-train-00002-of-00005",
+         "C:/Users/Administrator/PycharmProjects/mytensorflow/data.cifar10-train-00003-of-00005",
+         "C:/Users/Administrator/PycharmProjects/mytensorflow/data.cifar10-train-00004-of-00005"], shuffle=True,
+        num_epochs=2)
+    _, serialized_example = reader.read(filename_queue)
+    features = tf.parse_single_example(serialized_example,
+                                       features={
+                                           'img_raw': tf.FixedLenFeature([], tf.string),
+                                           'label': tf.FixedLenFeature([10], tf.int64)
+                                       })
+    img = features['img_raw']
+    img = tf.decode_raw(img, tf.float32)
+    img = tf.reshape(img, [IMG_WIDTH, IMG_HEIGHT, IMG_CHANNEL])
+    label = tf.cast(features['label'], tf.float32)
+    min_after_dequeue = 300
+    capacity = min_after_dequeue + 3 * batch_size
+    image_batch, label_batch = tf.train.shuffle_batch([img, label],
+                                                      batch_size=batch_size,
+                                                      capacity=capacity,
+                                                      min_after_dequeue=min_after_dequeue)
+    return image_batch, label_batch
 
 
 def main():
-    generate_record(TEST_FILE_PATTERN, 'data.cifar10-test', 1, 10000)
-    # generate_record(TRAIN_FILE_PATTERN, 'data.cifar10-train', 5)
+    # generate_record(TEST_FILE_PATTERN, 'data.cifar10-test', 1, 10000)
+    generate_record(TRAIN_FILE_PATTERN, 'data.cifar10-train', 5)
 
 
 if __name__ == '__main__':
